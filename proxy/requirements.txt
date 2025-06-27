@@ -1,0 +1,17 @@
+# GitHub Models Proxy Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+httpx>=0.25.0
+pydantic>=2.4.0
+python-multipart>=0.0.6
+
+# Optional: For enhanced monitoring and logging
+structlog>=23.2.0
+rich>=13.7.0
+
+# Optional: For liteLLM integration
+litellm>=1.44.0
+
+# Optional: For cost tracking and monitoring
+psutil>=5.9.0
+prometheus-client>=0.19.0

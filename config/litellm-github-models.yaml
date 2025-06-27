@@ -1,0 +1,115 @@
+# liteLLM Configuration for GitHub Models
+# =======================================
+
+model_list:
+  # OpenAI Models via GitHub
+  - model_name: github/gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 60  # Rate limit: requests per minute
+      tpm: 50000  # Rate limit: tokens per minute
+
+  - model_name: github/gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 60
+      tpm: 50000
+
+  # Meta Llama Models via GitHub
+  - model_name: github/llama-3.2-90b-vision
+    litellm_params:
+      model: meta-llama/Llama-3.2-90B-Vision-Instruct
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 30
+      tpm: 30000
+
+  - model_name: github/llama-3.2-11b-vision
+    litellm_params:
+      model: meta-llama/Llama-3.2-11B-Vision-Instruct
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 60
+      tpm: 40000
+
+  # Microsoft Phi Models via GitHub
+  - model_name: github/phi-3-medium-128k
+    litellm_params:
+      model: microsoft/Phi-3-medium-128k-instruct
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 60
+      tpm: 40000
+
+  - model_name: github/phi-3-mini-128k
+    litellm_params:
+      model: microsoft/Phi-3-mini-128k-instruct
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 120
+      tpm: 60000
+
+  # Mistral Models via GitHub
+  - model_name: github/mistral-large
+    litellm_params:
+      model: mistralai/Mistral-large
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 30
+      tpm: 30000
+
+  - model_name: github/mistral-nemo
+    litellm_params:
+      model: mistralai/Mistral-Nemo
+      api_base: https://models.inference.ai.azure.com
+      api_key: env:GITHUB_TOKEN
+      rpm: 60
+      tpm: 40000
+
+# Router Configuration
+router_settings:
+  routing_strategy: usage-based-routing  # Options: simple-shuffle, least-busy, usage-based-routing, latency-based-routing
+  model_group_alias:
+    github-large: ["github/gpt-4o", "github/llama-3.2-90b-vision", "github/mistral-large"]
+    github-small: ["github/gpt-4o-mini", "github/phi-3-mini-128k", "github/mistral-nemo"]
+  
+  retry_policy:
+    max_retries: 3
+    retry_delay: 1  # seconds
+    
+  fallback_models:
+    github/gpt-4o: ["github/gpt-4o-mini", "github/mistral-large"]
+    github/mistral-large: ["github/gpt-4o", "github/llama-3.2-90b-vision"]
+
+# General Settings
+general_settings:
+  master_key: env:LITELLM_MASTER_KEY  # Optional: Set in environment
+  database_url: null  # Optional: For usage tracking
+  
+  # Cost tracking
+  budget_and_rate_limit_per_key:
+    user-1:
+      max_budget: 100.0  # USD
+      budget_duration: month
+      
+  # Logging
+  success_callback: ["langfuse"]  # Optional: For monitoring
+  failure_callback: ["sentry"]   # Optional: For error tracking
+
+# Health Check Configuration
+health_check:
+  enabled: true
+  endpoint: "/health"
+
+# Load Balancing Configuration  
+load_balancing:
+  enable: true
+  
+# Security Settings
+security:
+  cors_origins: ["http://localhost:3000", "http://localhost:8080"]
+  allowed_ips: ["127.0.0.1", "::1"]
