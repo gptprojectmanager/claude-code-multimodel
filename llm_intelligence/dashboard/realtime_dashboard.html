@@ -412,8 +412,15 @@
     </div>
 
     <script>
-        // Configuration
-        const API_BASE_URL = 'http://localhost:8055';
+        // Configuration - Auto-detect if running on LAN
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.hostname === '';
+        
+        const API_BASE_URL = isLocalhost ? 
+            'http://localhost:8055' : 
+            `http://${window.location.hostname}:8055`;
+        
         const REFRESH_INTERVAL = 30000; // 30 seconds
         
         let performanceChart = null;

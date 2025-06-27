@@ -2,28 +2,47 @@
 
 ## 📋 Avvio Rapido
 
-### 1. Avvia il Server API
+### 1. Avvio Locale (localhost)
 
 ```bash
-# Opzione A: Usa il launcher script (raccomandato)
+# Opzione A: Solo API server
 cd llm_intelligence
 ./start_server.sh
 
 # Opzione B: Avvio manuale
 python3 test_server.py --port 8055
-
-# Opzione C: Usa una porta diversa se 8055 è occupata
-./start_server.sh 8056
 ```
 
-### 2. Apri la Dashboard
+### 2. 🌐 Avvio per Accesso LAN (Server Headless)
 
 ```bash
-# Apri nel browser
+# Avvia entrambi API + Dashboard per accesso LAN
+cd llm_intelligence
+./start_lan_server.sh
+
+# Con porte personalizzate
+./start_lan_server.sh --api-port 8055 --dashboard-port 8056
+```
+
+### 3. 🔥 Setup Firewall (se necessario)
+
+```bash
+# Apri le porte nel firewall per accesso LAN
+sudo ./setup_firewall.sh
+```
+
+### 4. Accesso alla Dashboard
+
+```bash
+# 📊 Locale (se hai desktop)
 firefox dashboard/realtime_dashboard.html
-# oppure
-google-chrome dashboard/realtime_dashboard.html
-# oppure visita: http://localhost:8055/
+
+# 🌐 Da PC in LAN (Ubuntu headless)
+# Sul tuo PC/mobile, apri: 
+http://192.168.1.100:8056/realtime_dashboard.html
+
+# 🔗 Test API da LAN
+curl http://192.168.1.100:8055/health
 ```
 
 ### 3. Testa gli Endpoint API

@@ -401,20 +401,21 @@ class LLMIntelligenceHandler(http.server.BaseHTTPRequestHandler):
         """Custom log message format"""
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {format % args}")
 
-def start_server(port=8055):
+def start_server(port=8055, host="0.0.0.0"):
     """Start the test server"""
     handler = LLMIntelligenceHandler
     
     try:
-        with socketserver.TCPServer(("", port), handler) as httpd:
-            print(f"🚀 LLM Intelligence Test Server starting on port {port}")
-            print(f"📊 Dashboard URL: http://localhost:{port}/")
+        with socketserver.TCPServer((host, port), handler) as httpd:
+            print(f"🚀 LLM Intelligence Test Server starting on {host}:{port}")
+            print(f"📊 Local Dashboard URL: http://localhost:{port}/")
+            print(f"🌐 LAN Dashboard URL: http://192.168.1.100:{port}/")
             print(f"🔗 API Endpoints:")
-            print(f"  • Rankings: http://localhost:{port}/rankings")
-            print(f"  • Providers: http://localhost:{port}/providers/claude-3.5-sonnet")
-            print(f"  • Recommendations: http://localhost:{port}/recommendations")
-            print(f"  • Benchmarks: http://localhost:{port}/benchmarks")
-            print(f"  • Health: http://localhost:{port}/health")
+            print(f"  • Rankings: http://192.168.1.100:{port}/rankings")
+            print(f"  • Providers: http://192.168.1.100:{port}/providers/claude-3.5-sonnet")
+            print(f"  • Recommendations: http://192.168.1.100:{port}/recommendations")
+            print(f"  • Benchmarks: http://192.168.1.100:{port}/benchmarks")
+            print(f"  • Health: http://192.168.1.100:{port}/health")
             print(f"\n✅ Server ready! Press Ctrl+C to stop.")
             
             httpd.serve_forever()
