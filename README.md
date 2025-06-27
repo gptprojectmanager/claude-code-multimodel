@@ -40,14 +40,35 @@ graph TB
 
 ## 🚀 Quick Start
 
-### 1. One-Command Setup
+### 1. Clone and Initialize
 ```bash
-git clone https://github.com/yourusername/claude-code-multimodel.git
+git clone https://github.com/gptprojectmanager/claude-code-multimodel.git
 cd claude-code-multimodel
+./scripts/init-config.sh
+```
+
+### 2. Configure API Keys
+Edit `config/credentials.env` with your API keys:
+```bash
+# Copy from template
+cp config/credentials.env.template config/credentials.env
+
+# Edit with your keys
+nano config/credentials.env
+```
+
+Required API keys:
+- **OpenRouter**: Get from https://openrouter.ai/keys
+- **GitHub Token**: Get from https://github.com/settings/tokens  
+- **Google Cloud**: Use existing gcloud setup or get API key from Google Cloud Console
+
+### 3. Start the System
+```bash
+./scripts/quick-setup.sh
 ./scripts/start-all-providers.sh
 ```
 
-### 2. Configure Claude Code
+### 4. Configure Claude Code
 ```bash
 export ANTHROPIC_BASE_URL=http://localhost:8080
 claude

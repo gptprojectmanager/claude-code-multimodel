@@ -61,10 +61,25 @@ if ! python -c "import fastapi, uvicorn, httpx, structlog, prometheus_client" 2>
     pip install fastapi uvicorn httpx structlog prometheus-client psutil > /dev/null 2>&1
 fi
 
-# Load configuration
-print_step "Loading configuration..."
+# Load configuration and credentials
+print_step "Loading configuration and credentials..."
 
-# Set default values
+# Load API credentials first
+if [ -f "./config/credentials.env" ]; then
+    source ./config/credentials.env
+    print_status "✅ API credentials loaded"
+    
+    # Also load provider-specific configs
+    [ -f "./config/vertex-ai.env" ] && source ./config/vertex-ai.env
+    [ -f "./config/github-models.env" ] && source ./config/github-models.env  
+    [ -f "./config/openrouter.env" ] && source ./config/openrouter.env
+    [ -f "./config/claude-code-integration.env" ] && source ./config/claude-code-integration.env
+    
+else
+    print_warning "⚠️  No credentials found. Please run: ./scripts/setup-credentials.sh"
+fi
+
+# Set default values (can be overridden by credentials.env)
 export PROXY_HOST=${PROXY_HOST:-"0.0.0.0"}
 export PROXY_PORT=${PROXY_PORT:-"8080"}
 export ENABLE_AUTHENTICATION=${ENABLE_AUTHENTICATION:-"false"}

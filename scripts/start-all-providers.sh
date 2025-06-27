@@ -120,6 +120,28 @@ if [ ! -f "./venv/bin/activate" ]; then
     exit 1
 fi
 
+# Load API credentials
+print_step "Loading API credentials..."
+if [ -f "./config/credentials.env" ]; then
+    source ./config/credentials.env
+    print_status "✅ API credentials loaded"
+    
+    # Also load provider-specific configs
+    [ -f "./config/vertex-ai.env" ] && source ./config/vertex-ai.env
+    [ -f "./config/github-models.env" ] && source ./config/github-models.env  
+    [ -f "./config/openrouter.env" ] && source ./config/openrouter.env
+    
+    # Set Google Application Credentials if available
+    if [ ! -z "$GOOGLE_CLOUD_PROJECT" ]; then
+        export GOOGLE_APPLICATION_CREDENTIALS="/tmp/vertex-ai-service-account.json"
+        export GOOGLE_CLOUD_PROJECT="$GOOGLE_CLOUD_PROJECT"
+    fi
+    
+else
+    print_warning "⚠️  No credentials found. Please run: ./scripts/setup-credentials.sh"
+    print_warning "Continuing without API keys - you'll need to configure them manually"
+fi
+
 # Check for required scripts
 REQUIRED_SCRIPTS=(
     "./scripts/start-vertex.sh"

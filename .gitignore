@@ -66,6 +66,17 @@ temp/
 *.key
 api-keys/
 secrets/
+credentials.env
+config/credentials.env
+**/credentials.env
+service-account*.json
+vertex-ai-service-account.json
+
+# Configuration files with real credentials (only templates should be committed)
+config/vertex-ai.env
+config/github-models.env
+config/openrouter.env
+!config/*.env.template
 
 # Database
 *.db
