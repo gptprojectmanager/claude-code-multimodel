@@ -118,7 +118,7 @@ Launches the FastAPI-based Claude proxy with intelligent model mapping and enhan
 
 | Provider | Primary Model | Secondary Model | Features |
 |----------|---------------|-----------------|----------|
-| **Google Vertex AI** | claude-sonnet-4@20250514 | claude-3-5-haiku@20241022 | Native Google Cloud, High reliability |
+| **Google Vertex AI** | claude-sonnet-4@20250514 | claude-3-5-haiku@20241022 | Native Google Cloud, High reliability (Region: us-east5) |
 | **GitHub Models** | claude-3-5-sonnet | claude-3-5-haiku | Free tier available, Azure-backed |
 | **OpenRouter** | anthropic/claude-3.5-sonnet | anthropic/claude-3-haiku | 100+ models, Competitive pricing |
 | **🆕 FastAPI Claude Proxy** | claude-sonnet-4-20250514 | claude-3-5-haiku-20241022 | Direct Anthropic API compatibility, Smart model mapping |

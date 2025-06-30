@@ -1,0 +1,156 @@
+# LiteLLM Optimized Configuration
+# Priority: Vertex AI → OpenRouter → GitHub Models
+
+model_list:
+  # Claude Models - OpenRouter Primary (Vertex AI disabled)
+  - model_name: claude-sonnet-4-20250514
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-sonnet
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 60
+      tpm: 50000
+      
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-sonnet
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 60
+      tpm: 50000
+
+  - model_name: claude-3-5-haiku
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-haiku
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 60
+      tpm: 50000
+
+  # Vertex AI Models - With Service Account
+  - model_name: vertex-claude-sonnet
+    litellm_params:
+      model: vertex_ai/claude-3-5-sonnet@20241022
+      vertex_project: custom-mix-460500-g9
+      vertex_location: us-east5
+      vertex_credentials: ./config/vertex-service-account.json
+      rpm: 60
+      tpm: 50000
+
+  - model_name: vertex-claude-haiku
+    litellm_params:
+      model: vertex_ai/claude-3-5-haiku@20241022
+      vertex_project: custom-mix-460500-g9
+      vertex_location: us-east5
+      vertex_credentials: ./config/vertex-service-account.json
+      rpm: 60
+      tpm: 50000
+
+  - model_name: vertex-gemini-pro
+    litellm_params:
+      model: vertex_ai/gemini-1.5-pro
+      vertex_project: custom-mix-460500-g9
+      vertex_location: us-east5
+      vertex_credentials: ./config/vertex-service-account.json
+      rpm: 60
+      tpm: 50000
+
+  - model_name: vertex-gemini-flash
+    litellm_params:
+      model: vertex_ai/gemini-1.5-flash
+      vertex_project: custom-mix-460500-g9
+      vertex_location: us-east5
+      vertex_credentials: ./config/vertex-service-account.json
+      rpm: 120
+      tpm: 100000
+
+  # OpenRouter Fallback Models
+  - model_name: openrouter-claude-sonnet
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-sonnet
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 50
+      tpm: 40000
+
+  - model_name: openrouter-claude-haiku
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-haiku
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 50
+      tpm: 40000
+
+  - model_name: openrouter-gpt4o
+    litellm_params:
+      model: openrouter/openai/gpt-4o
+      api_key: ${OPENROUTER_API_KEY}
+      api_base: https://openrouter.ai/api/v1
+      rpm: 50
+      tpm: 40000
+
+  # GitHub Models Fallback
+  - model_name: github-gpt4o
+    litellm_params:
+      model: github/gpt-4o
+      api_key: ${GITHUB_TOKEN}
+      rpm: 40
+      tpm: 30000
+
+  - model_name: github-gpt4o-mini
+    litellm_params:
+      model: github/gpt-4o-mini
+      api_key: ${GITHUB_TOKEN}
+      rpm: 60
+      tpm: 50000
+
+# Router Configuration con Fallback Intelligente
+router_settings:
+  routing_strategy: usage-based-routing
+  
+  # Fallback Strategy: Vertex AI → OpenRouter → GitHub Models
+  fallback_models:
+    # Claude Models
+    claude-sonnet-4-20250514: ["openrouter-claude-sonnet", "github-gpt4o"]
+    claude-3-5-sonnet: ["openrouter-claude-sonnet", "github-gpt4o"] 
+    claude-3-5-haiku: ["openrouter-claude-haiku", "github-gpt4o-mini"]
+    
+    # Gemini Models
+    gemini-1.5-pro: ["openrouter-gpt4o", "github-gpt4o"]
+    gemini-1.5-flash: ["openrouter-claude-haiku", "github-gpt4o-mini"]
+    
+  retry_policy:
+    max_retries: 3
+    retry_delay: 2
+
+# Cost and Rate Limiting
+general_settings:
+  # Cost tracking per user/team
+  budget_and_rate_limit_per_key:
+    default:
+      max_budget: 50.0
+      budget_duration: month
+      max_parallel_requests: 10
+      tpm: 100000
+      rpm: 200
+      
+  # Success/Failure callbacks for monitoring
+  success_callback: []
+  failure_callback: []
+  
+  # Database for tracking (optional)
+  database_url: null
+
+# Health Check
+health_check:
+  enabled: true
+  endpoint: "/health"
+  
+# Load Balancing
+load_balancing:
+  enable: true
+  
+# Security
+security:
+  cors_origins: ["*"]
+  allowed_ips: ["127.0.0.1", "::1", "0.0.0.0"]

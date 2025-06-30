@@ -76,7 +76,11 @@ vertex-ai-service-account.json
 config/vertex-ai.env
 config/github-models.env
 config/openrouter.env
+config/claude-code-integration.env
+config/unified.env
+config/litellm-*.yaml
 !config/*.env.template
+!config/litellm-github-models.yaml
 
 # Database
 *.db
@@ -91,6 +95,13 @@ openrouter-usage.log
 
 # Process IDs
 *.pid
+
+# Nested repositories (should be removed or managed as submodules)
+claude-code-proxy/.git/
+claude-code-proxy/
+
+# Service account files (contains sensitive data)
+config/vertex-service-account.json
 
 # Cache
 .cache/
