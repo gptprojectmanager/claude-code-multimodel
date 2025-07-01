@@ -38,7 +38,7 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
 # Google Cloud / Vertex AI
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
-GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-east5")
 
 # Configuration
 PREFERRED_PROVIDER = os.environ.get("PREFERRED_PROVIDER", "openrouter").lower()

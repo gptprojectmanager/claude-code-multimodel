@@ -1,0 +1,10 @@
+{
+  "model": "claude-3-5-haiku-20241022",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello! What region are you using?"
+    }
+  ],
+  "max_tokens": 100
+}

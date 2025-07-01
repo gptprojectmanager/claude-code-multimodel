@@ -76,7 +76,7 @@ class RateLimitingRouter:
             'vertex': {
                 'primary_model': 'claude-sonnet-4@20250514',
                 'secondary_model': 'claude-3-5-haiku@20241022',
-                'base_url': 'https://us-central1-aiplatform.googleapis.com/v1',
+                'base_url': 'https://us-east5-aiplatform.googleapis.com/v1',
                 'max_requests_per_minute': 1000,
                 'max_tokens_per_minute': 50000,
                 'cost_multiplier': 1.0,
