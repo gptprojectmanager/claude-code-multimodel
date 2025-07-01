@@ -14,6 +14,16 @@ echo "==============================================="
 # Check if required environment variables are set
 echo "🔍 Checking environment variables..."
 
+# Check Google Cloud configuration
+if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
+    echo "⚠️ GOOGLE_CLOUD_PROJECT not set - Vertex AI services may not work"
+fi
+
+if [ -z "$VERTEX_AI_LOCATION" ]; then
+    echo "⚠️ VERTEX_AI_LOCATION not set - defaulting to us-east5"
+    export VERTEX_AI_LOCATION=us-east5
+fi
+
 # Check GitHub token
 if [ -z "$GITHUB_TOKEN" ]; then
     echo "⚠️ GITHUB_TOKEN not set - GitHub Models service may not work"
@@ -60,7 +70,25 @@ start_service() {
 echo "📦 Starting available services..."
 echo ""
 
-# Start GitHub Models service (Port 8092)
+# Start Vertex AI Claude service (Port 8090) - Primary
+if start_service "vertex_claude" "8090" "vertex-claude.env"; then
+    VERTEX_CLAUDE_STARTED=true
+else
+    VERTEX_CLAUDE_STARTED=false
+fi
+
+echo ""
+
+# Start Vertex AI Gemini service (Port 8091) - Secondary
+if start_service "vertex_gemini" "8091" "vertex-gemini.env"; then
+    VERTEX_GEMINI_STARTED=true
+else
+    VERTEX_GEMINI_STARTED=false
+fi
+
+echo ""
+
+# Start GitHub Models service (Port 8092) - Tertiary
 if start_service "github_models" "8092" "github-models.env"; then
     GITHUB_STARTED=true
 else
@@ -69,7 +97,7 @@ fi
 
 echo ""
 
-# Start OpenRouter service (Port 8093)
+# Start OpenRouter service (Port 8093) - Fallback
 if start_service "openrouter" "8093" "openrouter.env"; then
     OPENROUTER_STARTED=true
 else
@@ -105,6 +133,20 @@ health_check() {
 HEALTHY_COUNT=0
 TOTAL_COUNT=0
 
+if [ "$VERTEX_CLAUDE_STARTED" = true ]; then
+    ((TOTAL_COUNT++))
+    if health_check "Vertex AI Claude" "8090"; then
+        ((HEALTHY_COUNT++))
+    fi
+fi
+
+if [ "$VERTEX_GEMINI_STARTED" = true ]; then
+    ((TOTAL_COUNT++))
+    if health_check "Vertex AI Gemini" "8091"; then
+        ((HEALTHY_COUNT++))
+    fi
+fi
+
 if [ "$GITHUB_STARTED" = true ]; then
     ((TOTAL_COUNT++))
     if health_check "GitHub Models" "8092"; then
@@ -128,22 +170,32 @@ if [ $HEALTHY_COUNT -eq $TOTAL_COUNT ] && [ $TOTAL_COUNT -gt 0 ]; then
     echo "🎯 All services are running successfully!"
     echo ""
     echo "📡 Available endpoints:"
-    [ "$GITHUB_STARTED" = true ] && echo "   GitHub Models: http://localhost:8092"
-    [ "$OPENROUTER_STARTED" = true ] && echo "   OpenRouter:    http://localhost:8093"
+    [ "$VERTEX_CLAUDE_STARTED" = true ] && echo "   Vertex AI Claude:  http://localhost:8090"
+    [ "$VERTEX_GEMINI_STARTED" = true ] && echo "   Vertex AI Gemini:  http://localhost:8091"
+    [ "$GITHUB_STARTED" = true ] && echo "   GitHub Models:     http://localhost:8092"
+    [ "$OPENROUTER_STARTED" = true ] && echo "   OpenRouter:        http://localhost:8093"
     echo ""
     echo "🔧 Test with:"
-    echo "   curl http://localhost:8092/health"
-    echo "   curl http://localhost:8093/health"
+    echo "   curl http://localhost:8090/health  # Vertex AI Claude"
+    echo "   curl http://localhost:8091/health  # Vertex AI Gemini"
+    echo "   curl http://localhost:8092/health  # GitHub Models"
+    echo "   curl http://localhost:8093/health  # OpenRouter"
     echo ""
     echo "📄 View logs:"
+    echo "   tail -f /tmp/vertex_claude.log"
+    echo "   tail -f /tmp/vertex_gemini.log"
     echo "   tail -f /tmp/github_models.log"
     echo "   tail -f /tmp/openrouter.log"
 else
     echo "⚠️ Some services failed to start or are unhealthy"
     echo ""
     echo "🔍 Troubleshooting:"
-    echo "   1. Check environment variables (GITHUB_TOKEN, OPENROUTER_API_KEY)"
-    echo "   2. Check logs in /tmp/<service_name>.log"
-    echo "   3. Verify ports are not in use: netstat -tlnp | grep -E ':(8092|8093)'"
+    echo "   1. Check environment variables:"
+    echo "      - GOOGLE_CLOUD_PROJECT, VERTEX_AI_LOCATION (for Vertex AI)"
+    echo "      - GITHUB_TOKEN (for GitHub Models)"
+    echo "      - OPENROUTER_API_KEY (for OpenRouter)"
+    echo "   2. Check Google Cloud authentication: gcloud auth list"
+    echo "   3. Check logs in /tmp/<service_name>.log"
+    echo "   4. Verify ports are not in use: netstat -tlnp | grep -E ':(8090|8091|8092|8093)'"
     exit 1
 fi

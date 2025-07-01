@@ -53,23 +53,21 @@ cd "$PROJECT_DIR"
 
 # Run the service based on service name
 case $SERVICE_NAME in
+    "vertex_claude")
+        python -m services.vertex_claude_service
+        ;;
+    "vertex_gemini")
+        python -m services.vertex_gemini_service
+        ;;
     "github_models")
         python -m services.github_models_service
         ;;
     "openrouter")
         python -m services.openrouter_service
         ;;
-    "vertex_claude")
-        echo "⚠️ Vertex Claude service not yet implemented"
-        exit 1
-        ;;
-    "vertex_gemini")
-        echo "⚠️ Vertex Gemini service not yet implemented"  
-        exit 1
-        ;;
     *)
         echo "❌ Unknown service: $SERVICE_NAME"
-        echo "   Available services: github_models, openrouter, vertex_claude, vertex_gemini"
+        echo "   Available services: vertex_claude, vertex_gemini, github_models, openrouter"
         exit 1
         ;;
 esac
