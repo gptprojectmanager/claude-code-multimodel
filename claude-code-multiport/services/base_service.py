@@ -188,7 +188,10 @@ class BaseMultiPortService:
             # Log success
             self.logger.info(f"✅ Response generated successfully")
             
-            return JSONResponse(content=response)
+            # Convert ModelResponse to dict for JSON serialization
+            response_dict = response.model_dump() if hasattr(response, 'model_dump') else dict(response)
+            
+            return JSONResponse(content=response_dict)
             
         except Exception as e:
             self.logger.error(f"❌ LiteLLM error: {str(e)}")

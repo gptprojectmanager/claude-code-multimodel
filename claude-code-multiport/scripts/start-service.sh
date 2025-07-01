@@ -21,15 +21,35 @@ ROOT_DIR="$(dirname "$PROJECT_DIR")"
 
 echo "🚀 Starting $SERVICE_NAME on port $PORT..."
 
-# Load configuration if file exists
+# Save original service name before loading config
+ORIGINAL_SERVICE_NAME="$SERVICE_NAME"
+
+# Load global credentials first (from main config directory)
+GLOBAL_CREDENTIALS="$ROOT_DIR/config/credentials.env"
+if [ -f "$GLOBAL_CREDENTIALS" ]; then
+    echo "🔑 Loading global credentials from $GLOBAL_CREDENTIALS"
+    set -a
+    source "$GLOBAL_CREDENTIALS"
+    set +a
+fi
+
+# Load service-specific configuration
 CONFIG_PATH="$PROJECT_DIR/config/$CONFIG_FILE"
 if [ -f "$CONFIG_PATH" ]; then
     echo "📋 Loading configuration from $CONFIG_PATH"
     set -a
     source "$CONFIG_PATH"
     set +a
+    # Restore original service name (don't let config override it)
+    SERVICE_NAME="$ORIGINAL_SERVICE_NAME"
 else
     echo "⚠️ Configuration file not found: $CONFIG_PATH"
+fi
+
+# Ensure LiteLLM gets the correct environment variable names
+if [ -n "$GITHUB_TOKEN" ]; then
+    export GITHUB_API_KEY="$GITHUB_TOKEN"
+    echo "🔧 Set GITHUB_API_KEY for LiteLLM"
 fi
 
 # Create logs directory if it doesn't exist
@@ -54,16 +74,16 @@ cd "$PROJECT_DIR"
 # Run the service based on service name
 case $SERVICE_NAME in
     "vertex_claude")
-        python -m services.vertex_claude_service
+        python3 -m services.vertex_claude_service
         ;;
     "vertex_gemini")
-        python -m services.vertex_gemini_service
+        python3 -m services.vertex_gemini_service
         ;;
     "github_models")
-        python -m services.github_models_service
+        python3 -m services.github_models_service
         ;;
     "openrouter")
-        python -m services.openrouter_service
+        python3 -m services.openrouter_service
         ;;
     *)
         echo "❌ Unknown service: $SERVICE_NAME"
