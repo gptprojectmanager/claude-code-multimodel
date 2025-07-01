@@ -236,6 +236,15 @@ claude-code-multiport/
 3. **Configuration**: Environment-based configuration with provider-specific files
 4. **Deployment**: Script-based deployment with health monitoring
 
+### Security Decisions
+1. **Configuration Security**: Template-based configuration management
+   - `.env.template` files committed to repository for documentation
+   - `.env` files with real credentials kept local only
+   - Comprehensive .gitignore to prevent credential leaks
+2. **API Key Management**: Environment variable based with startup script integration
+3. **Service Account Security**: JSON files excluded from version control
+4. **Runtime Security**: Credential validation during service health checks
+
 ## 🚨 Issues & Resolutions
 
 ### Issue 1: Shrimp Task Manager Synchronization Bug
@@ -249,6 +258,16 @@ claude-code-multiport/
 **Impact**: Blocked git push
 **Resolution**: Replaced real keys with placeholders
 **Status**: Resolved (Commit 7760a2e)
+
+### Issue 3: OpenRouter API Key Accidentally Pushed
+**Problem**: OpenRouter API key was committed and pushed to remote repository
+**Impact**: Security vulnerability - API key exposed publicly
+**Resolution**: 
+- API key removed from config files
+- Created .env.template files for all services
+- Updated .gitignore to prevent future .env commits
+- Implemented secure configuration management pattern
+**Status**: Resolved (Current commit)
 
 ## 🎯 Next Steps
 

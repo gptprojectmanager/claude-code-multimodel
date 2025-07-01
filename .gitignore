@@ -79,7 +79,12 @@ config/openrouter.env
 config/claude-code-integration.env
 config/unified.env
 config/litellm-*.yaml
+claude-code-multiport/config/vertex-claude.env
+claude-code-multiport/config/vertex-gemini.env
+claude-code-multiport/config/github-models.env
+claude-code-multiport/config/openrouter.env
 !config/*.env.template
+!claude-code-multiport/config/*.env.template
 !config/litellm-github-models.yaml
 
 # Database
