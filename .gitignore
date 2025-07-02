@@ -57,7 +57,7 @@ logs/
 /tmp/
 temp/
 
-# API Keys and Secrets
+# API Keys and Secrets - CRITICAL SECURITY
 .env
 *.env.local
 *.env.production
@@ -71,6 +71,31 @@ config/credentials.env
 **/credentials.env
 service-account*.json
 vertex-ai-service-account.json
+
+# Google Cloud credentials and secrets
+google-cloud-keyfile.json
+google-application-credentials.json
+gcp-service-account*.json
+vertex-service-account*.json
+
+# OpenRouter API keys (after security incident)
+*openrouter*key*
+*openrouter*api*
+
+# GitHub tokens and API keys
+*github*token*
+*github*api*key*
+
+# Any files containing 'secret', 'token', 'key', or 'credential'
+*secret*
+*token*
+*credential*
+*api*key*
+
+# Secret Manager backup/export files (if any)
+secret-manager-export/
+secrets-backup/
+*.secret
 
 # Configuration files with real credentials (only templates should be committed)
 config/vertex-ai.env
