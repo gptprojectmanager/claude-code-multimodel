@@ -40,11 +40,28 @@ class VertexClaudeService(BaseMultiPortService):
             "provider": "vertex_ai",
             "port": port,
             "models": {
-                "claude-sonnet-4-20250514": "claude-sonnet-4@20250514",
-                "claude-3-5-sonnet-20241022": "claude-3-5-sonnet@20240620",
+                # Claude 4 family (latest - highest priority)
+                "claude-opus-4": "claude-opus-4@20250514",
+                "claude-sonnet-4": "claude-sonnet-4@20250514", 
+                "claude-4-opus": "claude-opus-4@20250514",
+                "claude-4-sonnet": "claude-sonnet-4@20250514",
+                "anthropic/claude-sonnet-4": "claude-sonnet-4@20250514",
+                
+                # Claude 3.7 family (extended thinking)
+                "claude-3-7-sonnet": "claude-3-7-sonnet@20250219",
+                "claude-3.7-sonnet": "claude-3-7-sonnet@20250219",
+                
+                # Claude 3.5 family  
+                "claude-3-5-sonnet-20241022": "claude-3-5-sonnet@20241022",
+                "claude-3-5-sonnet-v2": "claude-3-5-sonnet@20241022",
+                "claude-3-5-sonnet": "claude-3-5-sonnet@20241022",
                 "claude-3-5-haiku-20241022": "claude-3-5-haiku@20241022",
-                "claude-3-5-sonnet": "claude-3-5-sonnet@20240620",
-                "claude-3-haiku": "claude-3-5-haiku@20241022"
+                "claude-3-5-haiku": "claude-3-5-haiku@20241022",
+                
+                # Claude 3 family (fallback)
+                "claude-3-opus": "claude-3-opus@20240229",
+                "claude-3-sonnet": "claude-3-sonnet@20240229", 
+                "claude-3-haiku": "claude-3-haiku@20240307"
             },
             "project": secret_config.get("project_id", os.getenv("GOOGLE_CLOUD_PROJECT")),
             "location": secret_config.get("location", os.getenv("VERTEX_AI_LOCATION", "us-east5")),
@@ -75,12 +92,20 @@ class VertexClaudeService(BaseMultiPortService):
         os.environ["VERTEX_PROJECT"] = self.provider_config["project"]
         os.environ["VERTEX_LOCATION"] = self.provider_config["location"]
         
+        # Additional LiteLLM specific configuration
+        os.environ["GOOGLE_CLOUD_PROJECT"] = self.provider_config["project"]
+        os.environ["VERTEX_AI_LOCATION"] = self.provider_config["location"]
+        
         # Set credentials if provided
         if self.provider_config.get("credentials"):
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.provider_config["credentials"]
             self.logger.info("🔧 Google Application Credentials configured")
         else:
             self.logger.info("🔧 Using default Google Cloud credentials (gcloud auth)")
+        
+        # Configure LiteLLM for Vertex AI region
+        litellm.vertex_project = self.provider_config["project"]
+        litellm.vertex_location = self.provider_config["location"]
         
         self.logger.info(f"✅ Vertex AI LiteLLM configured: {self.provider_config['location']}")
     
@@ -102,23 +127,35 @@ class VertexClaudeService(BaseMultiPortService):
             self.logger.info(f"🔄 Model mapped: {model} -> {mapped}")
             return mapped
         
-        # Pattern-based mapping for Claude models
-        if 'sonnet-4' in clean_model.lower() or 'sonnet4' in clean_model.lower():
+        # Pattern-based mapping for Claude models (prioritize newest)
+        if 'opus-4' in clean_model.lower() or 'opus4' in clean_model.lower():
+            mapped = "vertex_ai/claude-opus-4@20250514"
+            self.logger.info(f"🔄 Model mapped (opus-4 pattern): {model} -> {mapped}")
+            return mapped
+        elif 'sonnet-4' in clean_model.lower() or 'sonnet4' in clean_model.lower():
             mapped = "vertex_ai/claude-sonnet-4@20250514"
             self.logger.info(f"🔄 Model mapped (sonnet-4 pattern): {model} -> {mapped}")
             return mapped
+        elif '3.7' in clean_model.lower() or '3-7' in clean_model.lower():
+            mapped = "vertex_ai/claude-3-7-sonnet@20250219"
+            self.logger.info(f"🔄 Model mapped (3.7 pattern): {model} -> {mapped}")
+            return mapped
         elif 'sonnet' in clean_model.lower():
-            mapped = "vertex_ai/claude-3-5-sonnet@20240620"
+            mapped = "vertex_ai/claude-3-5-sonnet@20241022"
             self.logger.info(f"🔄 Model mapped (sonnet pattern): {model} -> {mapped}")
             return mapped
         elif 'haiku' in clean_model.lower():
             mapped = "vertex_ai/claude-3-5-haiku@20241022"
             self.logger.info(f"🔄 Model mapped (haiku pattern): {model} -> {mapped}")
             return mapped
+        elif 'opus' in clean_model.lower():
+            mapped = "vertex_ai/claude-3-opus@20240229"
+            self.logger.info(f"🔄 Model mapped (opus pattern): {model} -> {mapped}")
+            return mapped
         
-        # Default to Sonnet if it's a Claude model
+        # Default to Sonnet 4 if it's a Claude model (newest default)
         if 'claude' in clean_model.lower():
-            mapped = "vertex_ai/claude-3-5-sonnet@20240620"
+            mapped = "vertex_ai/claude-sonnet-4@20250514"
             self.logger.warning(f"⚠️ Model mapped (claude fallback): {model} -> {mapped}")
             return mapped
         
@@ -170,7 +207,7 @@ class VertexClaudeService(BaseMultiPortService):
                 "object": "model",
                 "created": 1677610602,
                 "owned_by": "google",
-                "provider_model": f"vertex_ai/{vertex_model}",
+                "provider_model": vertex_model,
                 "region": self.provider_config["location"]
             })
         

@@ -28,16 +28,16 @@ class VertexGeminiService(BaseMultiPortService):
         # Load configuration from Secret Manager
         try:
             secret_config = self.secret_client.get_provider_config("vertex_gemini")
-            self.logger.info("🔐 Loaded Vertex Gemini configuration from Secret Manager")
+            print("🔐 Loaded Vertex Gemini configuration from Secret Manager")
         except Exception as e:
-            self.logger.error(f"❌ Failed to load configuration from Secret Manager: {e}")
+            print(f"❌ Failed to load configuration from Secret Manager: {e}")
             # Fallback to environment variables for backward compatibility
             secret_config = {
                 "project_id": os.environ.get("GOOGLE_CLOUD_PROJECT", "custom-mix-460500-g9"),
                 "location": os.environ.get("VERTEX_AI_LOCATION", "us-east5"),
                 "service_account_path": os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
             }
-            self.logger.warning("⚠️ Using environment variables as fallback")
+            print("⚠️ Using environment variables as fallback")
         
         # Configuration for Vertex AI Gemini
         config = {
@@ -48,17 +48,19 @@ class VertexGeminiService(BaseMultiPortService):
             "location": secret_config.get("location", "us-east5"),
             "credentials": secret_config.get("service_account_path"),
             "models": {
-                # Gemini model mappings for us-east5
-                "gemini-2.0-flash-exp": "gemini-2.0-flash-exp",
-                "gemini-1.5-pro": "gemini-1.5-pro-002",
-                "gemini-1.5-flash": "gemini-1.5-flash-002",
-                "gemini-1.5-pro-002": "gemini-1.5-pro-002",
-                "gemini-1.5-flash-002": "gemini-1.5-flash-002",
+                # Gemini model mappings for us-east5 (correct LiteLLM format from fetch script)
+                "gemini-2.0-flash-exp": "vertex_ai/gemini-2.0-flash-exp",
+                "gemini-1.5-pro": "vertex_ai/gemini-1.5-pro-002",
+                "gemini-1.5-flash": "vertex_ai/gemini-1.5-flash-002",
+                "gemini-1.5-pro-002": "vertex_ai/gemini-1.5-pro-002",
+                "gemini-1.5-flash-002": "vertex_ai/gemini-1.5-flash-002",
+                "gemini-pro": "vertex_ai/gemini-1.5-pro-002",
+                "gemini-flash": "vertex_ai/gemini-1.5-flash-002",
                 
                 # Claude fallback mappings to Gemini (when Claude is unavailable)
-                "claude-3-5-sonnet-20241022": "gemini-1.5-pro-002",  # Map Sonnet to Pro
-                "claude-3-5-haiku-20241022": "gemini-1.5-flash-002",  # Map Haiku to Flash
-                "claude-sonnet-4-20250514": "gemini-2.0-flash-exp"   # Map Sonnet-4 to 2.0
+                "claude-3-5-sonnet-20241022": "vertex_ai/gemini-1.5-pro-002",  # Map Sonnet to Pro
+                "claude-3-5-haiku-20241022": "vertex_ai/gemini-1.5-flash-002",  # Map Haiku to Flash
+                "claude-sonnet-4-20250514": "vertex_ai/gemini-2.0-flash-exp"   # Map Sonnet-4 to 2.0
             }
         }
         
