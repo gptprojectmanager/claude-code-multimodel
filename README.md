@@ -1,6 +1,6 @@
 # Claude Code Multi-Model Integration
 
-🚀 **Intelligent multi-provider system for Claude Code with automatic rate limiting detection, cost optimization, and seamless fallback.**
+🚀 **Comprehensive multi-provider LLM system with AI-to-AI conversation memory, intelligent routing, and seamless provider fallback.**
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
@@ -8,34 +8,46 @@
 
 ## 🌟 Features
 
+- ✅ **Multi-Port Architecture** - Dedicated ports (8090-8093) for each provider with intelligent routing
+- ✅ **Zen MCP Integration** - AI-to-AI conversation memory with cross-provider session persistence  
 - ✅ **Intelligent Auto-Routing** - Smart provider selection based on cost, performance, and availability
 - ✅ **Rate Limiting Detection** - Automatic detection and avoidance of API rate limits
 - ✅ **Seamless Fallback** - Instant failover between providers when issues occur
 - ✅ **Real-time Cost Tracking** - Monitor spending across all providers with alerts
 - ✅ **Performance Optimization** - Route to fastest providers based on response times
+- ✅ **Cross-Provider Memory** - Conversation context preserved during provider switching
 - ✅ **Comprehensive Monitoring** - Web dashboard with metrics and analytics
-- ✅ **Zero Configuration** - Works with Claude Code out of the box
 
 ## 🏗️ Architecture
 
 ```mermaid
 graph TB
-    CC[Claude Code] --> IP[Intelligent Proxy :8080]
-    IP --> RLR[Rate Limiting Router]
-    IP --> CT[Cost Tracker]
-    IP --> HM[Health Monitor]
+    CC[Claude Code] --> IP[Intelligent Router :8080]
     
-    RLR --> VA[Vertex AI :8081]
-    RLR --> GM[GitHub Models :8082]
-    RLR --> OR[OpenRouter :8084]
+    IP --> ZEN[Zen MCP Orchestrator]
+    ZEN --> CM[Cross-Provider Memory]
+    ZEN --> PS[Provider Sessions]
     
-    CT --> DB[(SQLite DB)]
-    CT --> PM[Prometheus :8090]
-    HM --> Dashboard[Web Dashboard]
+    IP --> VC[Vertex Claude :8090]
+    IP --> VG[Vertex Gemini :8091] 
+    IP --> GM[GitHub Models :8092]
+    IP --> OR[OpenRouter :8093]
+    
+    VC --> VA[Vertex AI us-east5]
+    VG --> VA
+    GM --> AZ[Azure/GitHub]
+    OR --> MP[100+ Providers]
+    
+    CM --> DB[(Conversation Memory)]
+    PS --> SS[(Session Storage)]
     
     style IP fill:#f9f,stroke:#333,stroke-width:3px
-    style RLR fill:#bbf,stroke:#333,stroke-width:2px
-    style CT fill:#bfb,stroke:#333,stroke-width:2px
+    style ZEN fill:#9f9,stroke:#333,stroke-width:3px
+    style CM fill:#ff9,stroke:#333,stroke-width:2px
+    style VC fill:#bbf,stroke:#333,stroke-width:2px
+    style VG fill:#bbf,stroke:#333,stroke-width:2px
+    style GM fill:#bfb,stroke:#333,stroke-width:2px
+    style OR fill:#fbb,stroke:#333,stroke-width:2px
 ```
 
 ## 🚀 Quick Start
@@ -48,37 +60,48 @@ cd claude-code-multimodel
 ```
 
 ### 2. Configure API Keys
-Edit `config/credentials.env` with your API keys:
+Edit `claude-code-multiport/config/` files with your API keys:
 ```bash
-# Copy from template
-cp config/credentials.env.template config/credentials.env
+# Configure Vertex AI Claude (Primary - Port 8090)
+cp claude-code-multiport/config/vertex-claude.env.template claude-code-multiport/config/vertex-claude.env
 
-# Edit with your keys
-nano config/credentials.env
+# Configure Vertex AI Gemini (Secondary - Port 8091) 
+cp claude-code-multiport/config/vertex-gemini.env.template claude-code-multiport/config/vertex-gemini.env
+
+# Configure GitHub Models (Tertiary - Port 8092)
+cp claude-code-multiport/config/github-models.env.template claude-code-multiport/config/github-models.env
+
+# Configure OpenRouter (Fallback - Port 8093)
+cp claude-code-multiport/config/openrouter.env.template claude-code-multiport/config/openrouter.env
 ```
 
 Required API keys:
-- **OpenRouter**: Get from https://openrouter.ai/keys
+- **Google Cloud**: Vertex AI credentials for us-east5 region
 - **GitHub Token**: Get from https://github.com/settings/tokens  
-- **Google Cloud**: Use existing gcloud setup or get API key from Google Cloud Console
+- **OpenRouter**: Get from https://openrouter.ai/keys
 
-### 3. Start the System
+### 3. Start Multi-Port Services
 ```bash
-./scripts/quick-setup.sh
-./scripts/start-all-providers.sh
+cd claude-code-multiport
+./scripts/start-all-services.sh
 ```
 
 ### 4. Configure Claude Code
 ```bash
+# Primary: Vertex AI Claude (highest quality)
+export ANTHROPIC_BASE_URL=http://localhost:8090
+claude
+
+# Or use intelligent router (automatic provider selection)
 export ANTHROPIC_BASE_URL=http://localhost:8080
 claude
 ```
 
-That's it! The system will automatically:
-- Route requests to the best available provider
-- Detect rate limits and switch providers
-- Track costs and optimize for your preferences
-- Provide real-time monitoring and alerts
+The system provides:
+- **Cross-provider conversation memory** - Context preserved when switching providers
+- **Intelligent routing** - Automatic provider selection based on availability and performance
+- **Seamless fallback** - Instant failover: Vertex Claude → Vertex Gemini → GitHub Models → OpenRouter
+- **AI-to-AI threading** - Conversation continuity across different models and providers
 
 ## 📋 Prerequisites
 
@@ -116,33 +139,41 @@ Launches the FastAPI-based Claude proxy with intelligent model mapping and enhan
 
 ## 🎯 Supported Providers
 
-| Provider | Primary Model | Secondary Model | Features |
-|----------|---------------|-----------------|----------|
-| **Google Vertex AI** | claude-sonnet-4@20250514 | claude-3-5-haiku@20241022 | Native Google Cloud, High reliability (Region: us-east5) |
-| **GitHub Models** | claude-3-5-sonnet | claude-3-5-haiku | Free tier available, Azure-backed |
-| **OpenRouter** | anthropic/claude-3.5-sonnet | anthropic/claude-3-haiku | 100+ models, Competitive pricing |
-| **🆕 FastAPI Claude Proxy** | claude-sonnet-4-20250514 | claude-3-5-haiku-20241022 | Direct Anthropic API compatibility, Smart model mapping |
+| Provider | Port | Primary Model | Secondary Model | Features |
+|----------|------|---------------|-----------------|----------|
+| **Vertex AI Claude** | 8090 | claude-sonnet-4@20250514 | claude-3-5-haiku@20241022 | Primary provider, us-east5 region, highest reliability |
+| **Vertex AI Gemini** | 8091 | gemini-2.0-flash-exp | gemini-1.5-pro | Secondary provider, Google native models + Claude fallback |
+| **GitHub Models** | 8092 | claude-3-5-sonnet | claude-3-5-haiku | Tertiary provider, Azure-backed, free tier available |
+| **OpenRouter** | 8093 | anthropic/claude-3.5-sonnet | anthropic/claude-3-haiku | Fallback provider, 100+ models, competitive pricing |
+| **🆕 Intelligent Router** | 8080 | Auto-selected | Auto-fallback | Zen MCP orchestration, cross-provider memory |
 
 ## 🎮 Usage Examples
 
-### Basic Usage
+### Multi-Port Usage
 ```bash
-# Start the system
-./scripts/start-all-providers.sh
+# Start all services
+cd claude-code-multiport
+./scripts/start-all-services.sh
 
-# Use with Claude Code
-export ANTHROPIC_BASE_URL=http://localhost:8080
+# Use specific providers
+export ANTHROPIC_BASE_URL=http://localhost:8090  # Vertex AI Claude (Primary)
+export ANTHROPIC_BASE_URL=http://localhost:8091  # Vertex AI Gemini (Secondary)
+export ANTHROPIC_BASE_URL=http://localhost:8092  # GitHub Models (Tertiary)
+export ANTHROPIC_BASE_URL=http://localhost:8093  # OpenRouter (Fallback)
+
+# Or use intelligent router with Zen MCP orchestration
+export ANTHROPIC_BASE_URL=http://localhost:8080  # Auto-routing + memory
 claude
 ```
 
-### FastAPI Claude Proxy (Alternative)
+### Zen MCP Integration Usage
 ```bash
-# Start standalone Claude proxy
-./scripts/start-claude-anthropic-proxy.sh
+# The system automatically provides cross-provider conversation memory
+# Sessions persist across provider switches with context preservation
 
-# Use with Claude Code (port 8080)
+# Example: Start with Vertex AI, automatically fallback to GitHub Models if rate limited
 export ANTHROPIC_BASE_URL=http://localhost:8080
-claude
+claude --session-id my-project  # Context preserved across providers
 ```
 
 ### API Usage
@@ -356,38 +387,33 @@ Seamlessly integrates with the existing [claude-code-costs](https://github.com/p
 
 ```
 claude-code-multimodel/
-├── 📄 README.md                     # This file
+├── 📄 README.md                     # This file  
+├── 📋 PROJECT_PROGRESS.md           # Task progress tracking
 ├── 📋 requirements.txt              # Python dependencies
-├── 🔧 config/                       # Configuration files
-│   ├── vertex-ai.env
-│   ├── github-models.env
-│   ├── openrouter.env
-│   └── claude-code-integration.env
-├── 🧠 core/                         # Core routing logic
-│   ├── rate_limiting_router.py      # Intelligent routing engine
-│   └── intelligent_proxy.py         # Master proxy server
-├── 🔗 proxy/                        # Provider-specific proxies
-│   ├── claude_anthropic_proxy.py    # 🆕 FastAPI Claude Proxy
-│   ├── github_models_proxy.py
-│   ├── openrouter_proxy.py
-│   └── vertex_ai_proxy.py
+├── 🧠 memory/                       # 🆕 Zen MCP Integration
+│   └── zen_mcp_integration.py       # Cross-provider conversation memory
+├── 🏢 claude-code-multiport/        # 🆕 Multi-Port Services
+│   ├── services/                    # Provider-specific FastAPI services
+│   │   ├── vertex_claude_service.py # Port 8090 - Vertex AI Claude
+│   │   ├── vertex_gemini_service.py # Port 8091 - Vertex AI Gemini  
+│   │   ├── github_models_service.py # Port 8092 - GitHub Models
+│   │   └── openrouter_service.py    # Port 8093 - OpenRouter
+│   ├── config/                      # Service-specific configurations
+│   │   ├── vertex-claude.env        # Vertex AI Claude config
+│   │   ├── vertex-gemini.env        # Vertex AI Gemini config
+│   │   ├── github-models.env        # GitHub Models config
+│   │   └── openrouter.env           # OpenRouter config
+│   ├── scripts/                     # Service management
+│   │   ├── start-service.sh         # Individual service starter
+│   │   └── start-all-services.sh    # Multi-service orchestration
+│   └── tests/                       # Service testing suite
+├── 🔧 config/                       # Legacy configuration files
+├── 🧠 core/                         # Core routing logic (legacy)
+├── 🔗 proxy/                        # Provider-specific proxies (legacy)
 ├── 📊 monitoring/                   # Cost tracking & monitoring
-│   ├── cost_tracker.py
-│   ├── dashboard.py
-│   └── claude_costs_integration.py
 ├── 🛠️ scripts/                      # Setup and utility scripts
-│   ├── setup-vertex.sh
-│   ├── setup-github-models.sh
-│   ├── setup-openrouter.sh
-│   ├── start-all-providers.sh
-│   ├── start-claude-anthropic-proxy.sh  # 🆕 FastAPI Claude Proxy starter
-│   ├── start-intelligent-proxy.sh
-│   └── stop-all-providers.sh
 ├── 📚 docs/                         # Documentation
-│   └── FASTAPI_CLAUDE_PROXY.md      # 🆕 FastAPI proxy technical docs
 └── 💡 examples/                     # Usage examples
-    ├── basic_usage.py
-    └── fastapi_claude_proxy_examples.py  # 🆕 FastAPI proxy examples
 ```
 
 ## 🔍 API Endpoints
