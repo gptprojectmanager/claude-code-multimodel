@@ -16,12 +16,27 @@ echo "🔍 Checking environment variables..."
 
 # Check Google Cloud configuration
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
-    echo "⚠️ GOOGLE_CLOUD_PROJECT not set - Vertex AI services may not work"
+    echo "🔎 GOOGLE_CLOUD_PROJECT not set, attempting to detect from gcloud config..."
+    DETECTED_PROJECT=$(gcloud config get-value project 2>/dev/null)
+    if [ -n "$DETECTED_PROJECT" ]; then
+        echo "✅ Detected GOOGLE_CLOUD_PROJECT: $DETECTED_PROJECT"
+        export GOOGLE_CLOUD_PROJECT=$DETECTED_PROJECT
+    else
+        echo "❌ GOOGLE_CLOUD_PROJECT is not set and could not be detected."
+        echo "   Please set it or run 'gcloud init' and re-run the script."
+        exit 1
+    fi
+else
+    echo "✅ GOOGLE_CLOUD_PROJECT is set to: $GOOGLE_CLOUD_PROJECT"
+    export GOOGLE_CLOUD_PROJECT
 fi
 
 if [ -z "$VERTEX_AI_LOCATION" ]; then
     echo "⚠️ VERTEX_AI_LOCATION not set - defaulting to us-east5"
     export VERTEX_AI_LOCATION=us-east5
+else
+    echo "✅ VERTEX_AI_LOCATION is set to: $VERTEX_AI_LOCATION"
+    export VERTEX_AI_LOCATION
 fi
 
 # Check GitHub token

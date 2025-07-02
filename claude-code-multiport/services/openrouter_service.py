@@ -11,6 +11,7 @@ import httpx
 from typing import Dict, Any, Optional
 from .base_service import BaseMultiPortService
 import litellm
+from utils.secret_manager import SecretManagerClient
 
 class OpenRouterService(BaseMultiPortService):
     """
@@ -20,13 +21,29 @@ class OpenRouterService(BaseMultiPortService):
     """
     
     def __init__(self, port: int = 8093):
+        # Initialize Secret Manager client
+        self.secret_client = SecretManagerClient()
+        
+        # Load configuration from Secret Manager
+        try:
+            secret_config = self.secret_client.get_provider_config("openrouter")
+            self.logger.info("🔐 Loaded OpenRouter configuration from Secret Manager")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to load configuration from Secret Manager: {e}")
+            # Fallback to environment variables for backward compatibility
+            secret_config = {
+                "api_key": os.environ.get("OPENROUTER_API_KEY"),
+                "base_url": os.environ.get("OPENROUTER_ENDPOINT", "https://openrouter.ai/api/v1")
+            }
+            self.logger.warning("⚠️ Using environment variables as fallback")
+        
         # Configuration for OpenRouter
         config = {
             "service_name": "openrouter",
             "provider": "openrouter", 
             "port": port,
-            "endpoint": os.environ.get("OPENROUTER_ENDPOINT", "https://openrouter.ai/api/v1"),
-            "api_key": os.environ.get("OPENROUTER_API_KEY"),
+            "endpoint": secret_config.get("base_url", "https://openrouter.ai/api/v1"),
+            "api_key": secret_config.get("api_key"),
             "models": {
                 # Claude model mappings
                 "claude-3-5-sonnet-20241022": "anthropic/claude-3.5-sonnet",
@@ -47,7 +64,7 @@ class OpenRouterService(BaseMultiPortService):
         
         # Validate OpenRouter API key
         if not config["api_key"]:
-            self.logger.warning("⚠️ OPENROUTER_API_KEY not set - service will not work")
+            self.logger.warning("⚠️ OpenRouter API key not configured - service will not work")
     
     def configure_litellm(self):
         """Configure LiteLLM for OpenRouter"""

@@ -10,6 +10,9 @@ python-dotenv>=1.0.0
 # LiteLLM for multi-provider support
 litellm>=1.0.0
 
+# Google Cloud Secret Manager for secure credential management
+google-cloud-secret-manager>=2.16.0
+
 # HTTP client for health checks and API calls
 httpx>=0.25.0
 

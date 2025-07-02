@@ -12,6 +12,7 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from .base_service import BaseMultiPortService
 import litellm
+from utils.secret_manager import SecretManagerClient
 
 class GitHubModelsService(BaseMultiPortService):
     """
@@ -21,13 +22,29 @@ class GitHubModelsService(BaseMultiPortService):
     """
     
     def __init__(self, port: int = 8092):
+        # Initialize Secret Manager client
+        self.secret_client = SecretManagerClient()
+        
+        # Load configuration from Secret Manager
+        try:
+            secret_config = self.secret_client.get_provider_config("github_models")
+            self.logger.info("🔐 Loaded GitHub Models configuration from Secret Manager")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to load configuration from Secret Manager: {e}")
+            # Fallback to environment variables for backward compatibility
+            secret_config = {
+                "github_token": os.environ.get("GITHUB_TOKEN"),
+                "base_url": os.environ.get("GITHUB_MODELS_ENDPOINT", "https://models.github.ai")
+            }
+            self.logger.warning("⚠️ Using environment variables as fallback")
+        
         # Configuration for GitHub Models (start with fallback models)
         config = {
             "service_name": "github-models",
             "provider": "github_models",
             "port": port,
-            "endpoint": os.environ.get("GITHUB_MODELS_ENDPOINT", "https://models.github.ai"),
-            "token": os.environ.get("GITHUB_TOKEN"),
+            "endpoint": secret_config.get("base_url", "https://models.github.ai"),
+            "token": secret_config.get("github_token"),
             "models": {
                 # Fallback model mappings (will be updated dynamically)
                 "claude-3-5-sonnet-20241022": "gpt-4o",
@@ -44,7 +61,7 @@ class GitHubModelsService(BaseMultiPortService):
         
         # Validate GitHub token
         if not config["token"]:
-            self.logger.warning("⚠️ GITHUB_TOKEN not set - service may not work properly")
+            self.logger.warning("⚠️ GitHub token not configured - service may not work properly")
         
         # Flag to track if models have been fetched
         self._models_initialized = False

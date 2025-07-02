@@ -25,6 +25,13 @@ import httpx
 # Load environment variables
 load_dotenv()
 
+# Import Secret Manager for secure credential management
+try:
+    from utils.secret_manager import SecretManagerClient
+    SECRET_MANAGER_AVAILABLE = True
+except ImportError:
+    SECRET_MANAGER_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

@@ -12,6 +12,7 @@ import httpx
 from typing import Dict, Any, Optional
 from .base_service import BaseMultiPortService
 import litellm
+from utils.secret_manager import SecretManagerClient
 
 class VertexClaudeService(BaseMultiPortService):
     """
@@ -21,33 +22,50 @@ class VertexClaudeService(BaseMultiPortService):
     """
     
     def __init__(self, port: int = 8090):
-        # Configuration for Vertex AI Claude
+        # Initialize Secret Manager client
+        self.secret_client = SecretManagerClient()
+        
+        # Load configuration from Secret Manager first
+        try:
+            secret_config = self.secret_client.get_provider_config("vertex_claude")
+            print("🔐 Loaded Vertex Claude configuration from Secret Manager")
+        except Exception as e:
+            print(f"❌ Failed to load configuration from Secret Manager: {e}")
+            secret_config = {}
+            print("⚠️ Using environment variables as fallback")
+
+        # Base configuration with provider config
         config = {
             "service_name": "vertex-claude",
             "provider": "vertex_ai",
             "port": port,
-            "project": os.environ.get("GOOGLE_CLOUD_PROJECT", "custom-mix-460500-g9"),
-            "location": os.environ.get("VERTEX_AI_LOCATION", "us-east5"),
-            "credentials": os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"),
             "models": {
-                # Claude model mappings for us-east5
                 "claude-sonnet-4-20250514": "claude-sonnet-4@20250514",
                 "claude-3-5-sonnet-20241022": "claude-3-5-sonnet@20240620",
                 "claude-3-5-haiku-20241022": "claude-3-5-haiku@20241022",
-                
-                # Fallback mappings for various Claude model names
                 "claude-3-5-sonnet": "claude-3-5-sonnet@20240620",
                 "claude-3-haiku": "claude-3-5-haiku@20241022"
-            }
+            },
+            "project": secret_config.get("project_id", os.getenv("GOOGLE_CLOUD_PROJECT")),
+            "location": secret_config.get("location", os.getenv("VERTEX_AI_LOCATION", "us-east5")),
+            "credentials": secret_config.get("service_account_path", os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
         }
         
+        # Initialize base service
         super().__init__(port, config)
         
-        # Validate Google Cloud configuration
-        if not config["project"]:
-            self.logger.warning("⚠️ GOOGLE_CLOUD_PROJECT not set - service may not work")
+        # Update provider config from the config that was passed to base
+        self.provider_config.update({
+            "project": config["project"],
+            "location": config["location"],
+            "credentials": config["credentials"]
+        })
         
-        self.logger.info(f"🔵 Vertex AI configured: project={config['project']}, location={config['location']}")
+        # Validate Google Cloud configuration
+        if not self.provider_config["project"]:
+            self.logger.warning("⚠️ Google Cloud project not configured - service may not work")
+        
+        self.logger.info(f"🔵 Vertex AI configured: project={self.provider_config['project']}, location={self.provider_config['location']}")
     
     def configure_litellm(self):
         """Configure LiteLLM for Vertex AI"""
